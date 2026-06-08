@@ -55,7 +55,7 @@ function readPalette(): ChartPalette {
 
 /**
  * Task status by project, as a horizontal stacked bar. One bar per project, one
- * ordinal blue step per status. Horizontal because project names are long and a
+ * ordinal spruce step per status. Horizontal because project names are long and a
  * vertical axis would either clip them or tilt them.
  */
 export function PortfolioChart({ projects }: { projects: ProjectSummary[] }) {
@@ -138,7 +138,7 @@ export function PortfolioChart({ projects }: { projects: ProjectSummary[] }) {
           data: withTasks.map((project) => project.taskCounts[status]),
           backgroundColor: palette.series[status],
           // A 2px border in the surface colour is the gap between stacked
-          // segments, so adjacent blues never bleed into one another.
+          // segments, so adjacent shades never bleed into one another.
           borderColor: palette.surface,
           borderWidth: SEGMENT_GAP_PX,
           borderRadius: 4,

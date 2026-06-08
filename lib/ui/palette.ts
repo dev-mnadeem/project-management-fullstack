@@ -3,7 +3,7 @@ import type { TaskStatus } from '../domain/task';
 /**
  * The chart reads colours through JavaScript, the rest of the UI reads them
  * through CSS custom properties. Both resolve to the same variables declared in
- * app/globals.css, so there is exactly one definition of "Done blue".
+ * app/globals.css, so there is exactly one definition of the "Done" colour.
  */
 export const TASK_STATUS_VARIABLE: Record<TaskStatus, string> = {
   Todo: '--series-todo',
@@ -12,13 +12,13 @@ export const TASK_STATUS_VARIABLE: Record<TaskStatus, string> = {
 };
 
 const FALLBACK: Record<string, string> = {
-  '--series-todo': '#86b6ef',
-  '--series-progress': '#2a78d6',
-  '--series-done': '#104281',
-  '--ink-secondary': '#52514e',
-  '--ink-muted': '#898781',
-  '--line': '#e3e2dc',
-  '--surface': '#fcfcfb',
+  '--series-todo': '#a7d3c9',
+  '--series-progress': '#3a9a88',
+  '--series-done': '#0f5c52',
+  '--ink-secondary': '#4a4943',
+  '--ink-muted': '#6b6a64',
+  '--line': '#e2dfd5',
+  '--surface': '#fdfcf9',
 };
 
 /** Reads a custom property off the document root. Falls back to the light-mode

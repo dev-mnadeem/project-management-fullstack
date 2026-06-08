@@ -9,7 +9,7 @@ const SEGMENT_COLOR: Record<TaskStatus, string> = {
 
 /**
  * A stacked progress bar over the three task statuses. Segments are separated by
- * a 2px gap in the surface colour so adjacent blues stay distinguishable
+ * a 2px gap in the surface colour so adjacent shades stay distinguishable
  * without an outline.
  */
 export function ProgressBar({
