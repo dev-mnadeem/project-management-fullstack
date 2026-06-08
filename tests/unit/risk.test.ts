@@ -234,6 +234,22 @@ describe('AnthropicRiskBriefProvider', () => {
     expect((await providerReturning(create).brief(signals())).source).toBe('local-heuristic');
   });
 
+  it('falls back when the reply was cut off at max_tokens', async () => {
+    const create = vi.fn().mockResolvedValue({
+      stop_reason: 'max_tokens',
+      content: [{ type: 'text', text: '{"headline":"Half a sen' }],
+    });
+    expect((await providerReturning(create).brief(signals())).source).toBe('local-heuristic');
+  });
+
+  it('asks for low effort so thinking cannot exhaust the token budget', async () => {
+    const create = vi.fn().mockResolvedValue({ stop_reason: 'refusal', content: [] });
+    await providerReturning(create).brief(signals());
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'claude-opus-5', output_config: { effort: 'low' } }),
+    );
+  });
+
   it('keeps local text for any field the model omitted', async () => {
     const create = vi.fn().mockResolvedValue({
       stop_reason: 'end_turn',

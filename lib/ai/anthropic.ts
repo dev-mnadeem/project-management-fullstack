@@ -86,12 +86,21 @@ export class AnthropicRiskBriefProvider implements RiskBriefProvider {
       const response = await this.client.messages.create({
         model: this.options.model,
         max_tokens: MAX_TOKENS,
+        // Current Opus models think by default, and thinking draws on the same
+        // max_tokens budget. A four-field JSON brief needs little of it; low
+        // effort keeps the reply inside the budget and the latency short.
+        output_config: { effort: 'low' },
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: buildPrompt(signals) }],
       });
 
       if (response.stop_reason === 'refusal') {
         console.warn('[ai] model declined the request; using the local model');
+        return { ...local, source: this.fallbackName };
+      }
+
+      if (response.stop_reason === 'max_tokens') {
+        console.warn('[ai] model reply was cut off at max_tokens; using the local model');
         return { ...local, source: this.fallbackName };
       }
 
