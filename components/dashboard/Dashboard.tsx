@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CircleDot, FolderKanban, Plus, ListChecks } from 'lucide-react';
 import { api, queryKeys } from '@/lib/api/client';
 import { todayIso } from '@/lib/domain/dates';
-import { Button } from '@/components/ui/button';
+import { Button, buttonClassName } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CardSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -29,16 +29,24 @@ function useDebounced<T>(value: T, delayMs: number): T {
 
 export function Dashboard() {
   const [filters, setFilters] = React.useState<FilterState>({ search: '', status: '' });
+  const [offset, setOffset] = React.useState(0);
   const debouncedSearch = useDebounced(filters.search, SEARCH_DEBOUNCE_MS);
   const today = todayIso();
+
+  // A new search or status starts from the first page again.
+  const changeFilters = (next: FilterState) => {
+    setFilters(next);
+    setOffset(0);
+  };
 
   const params = React.useMemo(
     () => ({
       limit: PAGE_SIZE,
+      offset: offset || undefined,
       search: debouncedSearch.trim() || undefined,
       status: filters.status || undefined,
     }),
-    [debouncedSearch, filters.status],
+    [debouncedSearch, filters.status, offset],
   );
 
   const projectsQuery = useQuery({
@@ -53,6 +61,7 @@ export function Dashboard() {
   });
 
   const projects = projectsQuery.data?.items ?? [];
+  const matchingCount = projectsQuery.data?.total ?? projects.length;
   const analytics = analyticsQuery.data;
   const isFiltered = Boolean(params.search || params.status);
 
@@ -68,11 +77,9 @@ export function Dashboard() {
             Every project, what is left in it, and what is already late.
           </p>
         </div>
-        <Link href="/projects/create" className="shrink-0">
-          <Button>
-            <Plus className="h-4 w-4" />
-            New project
-          </Button>
+        <Link href="/projects/create" className={buttonClassName({ className: 'shrink-0' })}>
+          <Plus aria-hidden className="h-4 w-4" />
+          New project
         </Link>
       </header>
 
@@ -139,8 +146,8 @@ export function Dashboard() {
         <div className="mt-4">
           <ProjectFilters
             value={filters}
-            onChange={setFilters}
-            resultCount={projects.length}
+            onChange={changeFilters}
+            resultCount={matchingCount}
             total={analytics?.projectCount ?? projectsQuery.data?.total ?? 0}
           />
         </div>
@@ -178,23 +185,53 @@ export function Dashboard() {
                 isFiltered ? (
                   <Button
                     variant="secondary"
-                    onClick={() => setFilters({ search: '', status: '' })}
+                    onClick={() => changeFilters({ search: '', status: '' })}
                   >
                     Clear filters
                   </Button>
                 ) : (
-                  <Link href="/projects/create">
-                    <Button>Create a project</Button>
+                  <Link href="/projects/create" className={buttonClassName()}>
+                    Create a project
                   </Link>
                 )
               }
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {projects.map((project) => (
-                <ProjectCard key={project.id} project={project} today={today} />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {projects.map((project) => (
+                  <ProjectCard key={project.id} project={project} today={today} />
+                ))}
+              </div>
+              {matchingCount > PAGE_SIZE && (
+                <nav
+                  aria-label="Project pages"
+                  className="mt-6 flex flex-wrap items-center justify-between gap-3"
+                >
+                  <p className="tabular text-xs text-ink-muted">
+                    Showing {offset + 1}–{offset + projects.length} of {matchingCount}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={offset === 0}
+                      onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={offset + PAGE_SIZE >= matchingCount}
+                      onClick={() => setOffset(offset + PAGE_SIZE)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </nav>
+              )}
+            </>
           )}
         </div>
       </section>
