@@ -1,6 +1,11 @@
-import { Pool } from 'pg';
+import { Pool, types } from 'pg';
 import { config } from '../../config';
 import { ConfigError } from '../../domain/errors';
+
+// By default pg turns a `date` column into a Date at local midnight, and
+// toISOString() then shifts it to the previous day on any server east of UTC.
+// Deadlines and due dates are calendar dates, so keep them as YYYY-MM-DD text.
+types.setTypeParser(types.builtins.DATE, (value: string) => value);
 
 /**
  * Next.js reloads modules on every edit in development; a module-scoped `new
