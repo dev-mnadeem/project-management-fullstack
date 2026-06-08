@@ -22,6 +22,13 @@ describe('buildConfig', () => {
     expect(config.ai.timeoutMs).toBe(1500);
   });
 
+  it('treats empty variables as unset, as docker compose passes them', () => {
+    const config = buildConfig({ ANTHROPIC_API_KEY: '', DATA_DRIVER: '', AI_TIMEOUT_MS: ' ' });
+    expect(config.ai.apiKey).toBeNull();
+    expect(config.dataDriver).toBe('memory');
+    expect(config.ai.timeoutMs).toBe(8_000);
+  });
+
   it('defaults the model to claude-opus-5 and leaves the key null', () => {
     const config = buildConfig({});
     expect(config.ai.model).toBe('claude-opus-5');

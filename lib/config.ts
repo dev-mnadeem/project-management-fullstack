@@ -33,7 +33,13 @@ export interface AppConfig {
 export type EnvSource = Record<string, string | undefined>;
 
 function build(source: EnvSource): AppConfig {
-  const parsed = envSchema.safeParse(source);
+  // Compose's `${VAR:-}` and a blank line in .env both hand over "" for a
+  // variable the operator meant to leave unset. Treat it as unset, or an empty
+  // ANTHROPIC_API_KEY fails validation and takes every API route down with it.
+  const present = Object.fromEntries(
+    Object.entries(source).filter(([, value]) => value !== undefined && value.trim() !== ''),
+  );
+  const parsed = envSchema.safeParse(present);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     throw new Error(`Invalid environment configuration -> ${issues}`);
