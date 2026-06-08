@@ -1,0 +1,132 @@
+@import "tailwindcss";
+
+/*
+ * One palette, defined once. Chart colours and status colours live here too, so
+ * the bar in the portfolio chart and the pill on a card can never drift apart.
+ * The task-status ramp is ordinal (Todo -> In Progress -> Done reads light to
+ * dark) rather than categorical, because the three states are ordered.
+ */
+:root {
+  color-scheme: light;
+
+  --plane: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f2f1ed;
+
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+
+  --line: #e3e2dc;
+  --line-strong: #c9c8c0;
+
+  --accent: #2a78d6;
+  --accent-strong: #1c5cab;
+  --accent-wash: #eaf2fd;
+  --on-accent: #ffffff;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+  --status-good-wash: #e8f7e8;
+  --status-warning-wash: #fdf3dd;
+  --status-critical-wash: #fbeaea;
+
+  --series-todo: #86b6ef;
+  --series-progress: #2a78d6;
+  --series-done: #104281;
+
+  --focus-ring: #2a78d6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-raised: #232321;
+    --surface-sunken: #141413;
+
+    --ink: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+
+    --line: #2c2c2a;
+    --line-strong: #3d3d3a;
+
+    --accent: #3987e5;
+    --accent-strong: #5598e7;
+    --accent-wash: #16263a;
+    --on-accent: #0b0b0b;
+
+    --status-good-wash: #10240f;
+    --status-warning-wash: #2c2410;
+    --status-critical-wash: #2b1414;
+
+    --series-todo: #184f95;
+    --series-progress: #3987e5;
+    --series-done: #9ec5f4;
+  }
+}
+
+@theme inline {
+  --color-plane: var(--plane);
+  --color-surface: var(--surface);
+  --color-raised: var(--surface-raised);
+  --color-sunken: var(--surface-sunken);
+
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-ink-muted: var(--ink-muted);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-wash: var(--accent-wash);
+  --color-on-accent: var(--on-accent);
+
+  --color-good: var(--status-good);
+  --color-warning: var(--status-warning);
+  --color-critical: var(--status-critical);
+  --color-good-wash: var(--status-good-wash);
+  --color-warning-wash: var(--status-warning-wash);
+  --color-critical-wash: var(--status-critical-wash);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+}
+
+html {
+  background: var(--plane);
+}
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers that sit in a column - stat tiles, chart axes - must not jitter. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.skeleton {
+  background: var(--surface-sunken);
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
