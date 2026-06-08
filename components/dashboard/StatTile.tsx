@@ -22,7 +22,7 @@ export function StatTile({
     tone === 'critical' ? 'text-critical' : tone === 'good' ? 'text-good' : 'text-ink';
 
   return (
-    <div className="rounded-xl border border-line bg-surface px-5 py-4">
+    <div className="rounded-xl border border-line bg-surface px-4 py-4 sm:px-5">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[13px] font-medium text-ink-secondary">{label}</p>
         {icon && <span className="text-ink-muted">{icon}</span>}

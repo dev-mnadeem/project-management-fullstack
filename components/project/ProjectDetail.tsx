@@ -116,7 +116,7 @@ export function ProjectDetail({ projectId }: { projectId: number }) {
 
   if (projectQuery.isPending) {
     return (
-      <main className="mx-auto w-full max-w-5xl px-6 py-10">
+      <main className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-10">
         <Skeleton className="h-4 w-32" />
         <Skeleton className="mt-6 h-9 w-2/3" />
         <Skeleton className="mt-3 h-4 w-full max-w-xl" />
@@ -132,7 +132,7 @@ export function ProjectDetail({ projectId }: { projectId: number }) {
   if (projectQuery.isError || !project) {
     const notFound = projectQuery.error instanceof ApiError && projectQuery.error.status === 404;
     return (
-      <main className="mx-auto w-full max-w-3xl px-6 py-20">
+      <main className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-20">
         <EmptyState
           title={notFound ? 'Project not found' : 'Could not load this project'}
           body={
@@ -159,7 +159,7 @@ export function ProjectDetail({ projectId }: { projectId: number }) {
   const overdue = project.status !== 'Completed' && isPast(project.deadline, today);
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
+    <main className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-10">
       <Link
         href="/"
         className="inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-secondary transition-colors hover:text-ink"

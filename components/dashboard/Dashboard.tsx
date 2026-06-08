@@ -67,7 +67,7 @@ export function Dashboard() {
   const isFiltered = Boolean(params.search || params.status);
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-10">
+    <main className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[13px] font-medium text-ink-muted">Portfolio</p>
@@ -84,10 +84,10 @@ export function Dashboard() {
         </Link>
       </header>
 
-      <section aria-label="Portfolio totals" className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <section aria-label="Portfolio totals" className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {analyticsQuery.isPending || !analytics ? (
           Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className="rounded-xl border border-line bg-surface px-5 py-4">
+            <div key={index} className="rounded-xl border border-line bg-surface px-4 py-4 sm:px-5">
               <Skeleton className="h-3 w-20" />
               <Skeleton className="mt-3 h-8 w-12" />
             </div>
