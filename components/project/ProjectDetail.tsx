@@ -10,7 +10,7 @@ import { PROJECT_STATUS_META } from '@/lib/domain/project';
 import { TASK_STATUSES, type TaskStatus } from '@/lib/domain/task';
 import { formatDate, isPast, todayIso } from '@/lib/domain/dates';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, buttonClassName } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
@@ -140,8 +140,8 @@ export function ProjectDetail({ projectId }: { projectId: number }) {
               : message(projectQuery.error, 'The project endpoint did not respond.')
           }
           action={
-            <Link href="/">
-              <Button variant="secondary">Back to dashboard</Button>
+            <Link href="/" className={buttonClassName({ variant: 'secondary' })}>
+              Back to dashboard
             </Link>
           }
         />
@@ -243,6 +243,16 @@ export function ProjectDetail({ projectId }: { projectId: number }) {
                 <CardSkeleton key={index} />
               ))}
             </div>
+          ) : tasksQuery.isError ? (
+            <EmptyState
+              title="Could not load the tasks"
+              body={message(tasksQuery.error, 'The tasks endpoint did not respond.')}
+              action={
+                <Button variant="secondary" onClick={() => tasksQuery.refetch()}>
+                  Try again
+                </Button>
+              }
+            />
           ) : tasks.length === 0 ? (
             <EmptyState
               title="No tasks in this project"

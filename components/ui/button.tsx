@@ -23,6 +23,23 @@ const SIZES: Record<Size, string> = {
   md: 'h-10 px-4 text-sm',
 };
 
+/** The button look as a class string, for a <Link> that navigates. Wrapping a
+ *  <button> in an <a> nests two interactive elements, which is invalid HTML and
+ *  gives keyboard and screen-reader users two tab stops for one action. */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: { variant?: Variant; size?: Size; className?: string } = {}): string {
+  return cn(
+    'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
+    'transition-colors disabled:cursor-not-allowed disabled:opacity-50',
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  );
+}
+
 /**
  * `type` defaults to "button". The previous implementation let it default to
  * the HTML default of "submit", which made every Cancel button inside a modal
@@ -36,13 +53,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
     <button
       ref={ref}
       type={type}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium',
-        'transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      )}
+      className={buttonClassName({ variant, size, className })}
       {...props}
     />
   );

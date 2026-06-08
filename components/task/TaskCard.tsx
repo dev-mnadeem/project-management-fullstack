@@ -77,7 +77,7 @@ export function TaskCard({ task, today }: { task: Task; today: string }) {
   return (
     <article className="flex flex-col rounded-xl border border-line bg-surface p-4">
       <div className="flex items-start justify-between gap-2">
-        <h4 className="text-sm font-semibold leading-snug text-ink">{task.title}</h4>
+        <h3 className="text-sm font-semibold leading-snug text-ink">{task.title}</h3>
         <div className="flex shrink-0 gap-1">
           <Button
             variant="ghost"
