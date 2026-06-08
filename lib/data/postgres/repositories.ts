@@ -67,11 +67,23 @@ function buildSetClause(
   return { sql: assignments.join(', '), values };
 }
 
-/** `COUNT(*) OVER ()` gives the unfiltered total alongside the page, so a list
- *  endpoint costs one round trip instead of a SELECT plus a COUNT. */
-function readTotal(rows: Array<{ total_count?: string | number }>, fallback: number): number {
-  if (rows.length === 0) return fallback;
-  return Number(rows[0].total_count ?? fallback);
+/**
+ * `COUNT(*) OVER ()` gives the filtered total alongside the page, so a list
+ * endpoint usually costs one round trip. A page past the end has no rows to
+ * carry that column, so only then is a separate COUNT issued - otherwise the
+ * client would be told the collection is empty when it is not.
+ */
+async function readTotal(
+  pool: Pool,
+  rows: Array<{ total_count?: string | number }>,
+  offset: number,
+  countSql: string,
+  filterValues: unknown[],
+): Promise<number> {
+  if (rows.length > 0) return Number(rows[0].total_count ?? 0);
+  if (offset === 0) return 0;
+  const { rows: countRows } = await pool.query<{ count: number }>(countSql, filterValues);
+  return Number(countRows[0]?.count ?? 0);
 }
 
 export class PostgresProjectRepository implements ProjectRepository {
@@ -89,6 +101,7 @@ export class PostgresProjectRepository implements ProjectRepository {
       conditions.push(`(title ILIKE $${values.length} OR description ILIKE $${values.length})`);
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const filterValues = [...values];
     values.push(params.limit, params.offset);
     const { rows } = await this.pool.query<ProjectRow & { total_count: string }>(
       `SELECT ${PROJECT_COLUMNS}, COUNT(*) OVER () AS total_count
@@ -100,7 +113,13 @@ export class PostgresProjectRepository implements ProjectRepository {
     );
     return {
       items: rows.map(toProject),
-      total: readTotal(rows, 0),
+      total: await readTotal(
+        this.pool,
+        rows,
+        params.offset,
+        `SELECT COUNT(*)::int AS count FROM projects ${where}`,
+        filterValues,
+      ),
       limit: params.limit,
       offset: params.offset,
     };
@@ -161,6 +180,7 @@ export class PostgresTaskRepository implements TaskRepository {
       conditions.push(`priority = $${values.length}`);
     }
     const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const filterValues = [...values];
     values.push(params.limit, params.offset);
     const { rows } = await this.pool.query<TaskRow & { total_count: string }>(
       `SELECT ${TASK_COLUMNS}, COUNT(*) OVER () AS total_count
@@ -172,7 +192,13 @@ export class PostgresTaskRepository implements TaskRepository {
     );
     return {
       items: rows.map(toTask),
-      total: readTotal(rows, 0),
+      total: await readTotal(
+        this.pool,
+        rows,
+        params.offset,
+        `SELECT COUNT(*)::int AS count FROM tasks ${where}`,
+        filterValues,
+      ),
       limit: params.limit,
       offset: params.offset,
     };
