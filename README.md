@@ -1,18 +1,20 @@
-# Project Dashboard
+# Project Tracker with Delivery-Risk Briefs
 
 A project and task tracker that answers one question on the way in — *which of these
 is going to be late?* — and then lets you drill into why.
 
 ![The portfolio dashboard: four totals, a stacked bar of task status per project, and the project grid](docs/screenshots/dashboard.png)
 
-Built with Next.js 15 (App Router), TypeScript, Tailwind v4, TanStack Query and
-Chart.js, over PostgreSQL. It ships with an in-memory driver seeded with demo data,
+Built with Next.js 15.5 (App Router), React 19, TypeScript, Tailwind v4, TanStack
+Query and Chart.js, over PostgreSQL. It ships with an in-memory driver seeded with demo data,
 so the screenshot above is what you get from `npm install && npm run dev` on a clean
 checkout with no database running.
 
 ---
 
 ## Run it
+
+Node 22 is required (`.nvmrc`, `engines`).
 
 ```bash
 npm install
@@ -54,11 +56,22 @@ the tasks with their owner, due date and an overdue flag.
 ![A project page: progress on the left, the delivery-risk brief on the right, task cards below](docs/screenshots/project-detail.png)
 
 Search and the status filter drive the server query (`?search=`, `?status=`), so
-filtering a large portfolio does not mean downloading it first. A full-page capture
+filtering a large portfolio does not mean downloading it first. The grid shows 24
+projects at a time and pages with Previous/Next over `?offset=` once a portfolio is
+larger than that. A full-page capture
 of the dashboard, project grid included, is at
 [`docs/screenshots/dashboard-full.png`](docs/screenshots/dashboard-full.png), and the
 create form at
 [`docs/screenshots/create-project.png`](docs/screenshots/create-project.png).
+
+The layout holds at phone width, and the palette follows the system dark mode:
+
+<p>
+  <img src="docs/screenshots/dashboard-mobile.png" alt="The dashboard at 390px wide: totals two by two, the chart, then one project card per row" width="260">
+  <img src="docs/screenshots/project-detail-mobile.png" alt="A project page at 390px wide" width="260">
+</p>
+
+![The dashboard in dark mode](docs/screenshots/dashboard-dark.png)
 
 ---
 
@@ -227,9 +240,54 @@ All bodies are JSON and camelCase. Errors are
 | `GET` | `/api/analytics` | portfolio totals, counted by the datastore |
 | `GET` | `/api/health` | 200 or 503; reports the active driver and AI provider |
 
+These were captured from the Compose stack (Postgres driver, seed data, no API key):
+
 ```bash
 curl -s localhost:3000/api/health
-# {"status":"ok","driver":"memory","datastoreReachable":true,"aiProvider":"local-heuristic",...}
+```
+```json
+{"status":"ok","driver":"postgres","datastoreReachable":true,"aiProvider":"local-heuristic","timestamp":"2026-11-08T13:12:43.068Z"}
+```
+
+```bash
+curl -s localhost:3000/api/projects/2/brief
+```
+```json
+{
+  "level": "at-risk",
+  "score": 27,
+  "headline": "Warehouse Mobile Scanner is slipping but still recoverable.",
+  "findings": [
+    "1 of 3 tasks complete (33%), with 1 in progress.",
+    "1 task is past its due date, starting with \"Depot pilot in Rotterdam\".",
+    "9 days remain before the deadline.",
+    "1 high-priority task still open."
+  ],
+  "recommendation": "Confirm the dates on the open work and escalate anything without a clear owner.",
+  "source": "local-heuristic"
+}
+```
+
+A page past the end is empty but still reports the real total:
+
+```bash
+curl -s 'localhost:3000/api/projects?offset=40&limit=5'
+```
+```json
+{"items":[],"total":5,"limit":5,"offset":40}
+```
+
+Validation failures name every failing field:
+
+```bash
+curl -s -X POST localhost:3000/api/projects -H 'content-type: application/json' \
+  -d '{"title":"","status":"Paused","deadline":"2026-02-31"}'
+```
+```json
+{"error":{"code":"invalid_request","message":"The request body or query string failed validation","details":[
+  {"path":"title","message":"Title is required"},
+  {"path":"status","message":"Invalid enum value. Expected 'Active' | 'On Hold' | 'Completed', received 'Paused'"},
+  {"path":"deadline","message":"Not a real calendar date"}]}}
 ```
 
 `photoUrls` is restricted to `http` and `https` at the schema level — a
@@ -256,6 +314,13 @@ Zod at startup. See `.env.example`.
 | `ANALYTICS_CACHE_TTL_MS` | `10000` | In-process TTL for `/api/analytics`. `0` disables it. |
 
 An invalid value is a startup error naming the variable, not a runtime surprise.
+An empty value counts as unset, which is what Compose's `${ANTHROPIC_API_KEY:-}`
+passes when no key is configured.
+
+With a key, the brief is requested at low effort: current models think before
+answering, that thinking shares the `max_tokens` budget, and a four-field JSON
+brief does not need much of it. A reply cut off at `max_tokens` falls back to the
+local text like any other failure.
 
 ---
 
@@ -266,7 +331,7 @@ npm test            # vitest run
 npm run check       # lint + typecheck + test
 ```
 
-154 tests across 11 files, all passing. Node tests by default; component tests opt
+164 tests across 14 files, all passing. Node tests by default; component tests opt
 into jsdom with a `@vitest-environment jsdom` docblock. Nothing touches a database
 — the in-memory driver implements the same repository interfaces the Postgres
 driver does, which is what makes the service and route tests possible at all.
@@ -282,6 +347,12 @@ What is actually covered:
 - **The hosted provider's fallbacks** — network failure, a refusal, a non-JSON
   reply and a partial reply each fall back to the local text while keeping the
   locally computed score.
+- **The Postgres driver without a database** - `date` columns come back as
+  `YYYY-MM-DD` text rather than local-midnight `Date`s (which shifted every
+  deadline a day early east of UTC), and an out-of-range page still reports its
+  total.
+- **Dashboard paging** - against a stubbed API, including that "New project" is a
+  plain link and not a button nested inside one.
 - **Regressions with a name.** `formatDate(null)` is `'—'` and never
   `'Invalid Date'`; `2026-02-31` is rejected rather than rolled into March; a
   `<Button>` defaults to `type="button"` so a Cancel inside a modal form closes it
@@ -292,7 +363,7 @@ What is actually covered:
 ## Docker
 
 ```bash
-docker compose up --build     # app on :3000, postgres on :5432
+docker compose up --build     # app on :3000, postgres on 127.0.0.1:5432
 ```
 
 The Dockerfile is three stages — dependency install against the lockfile, build,
@@ -301,9 +372,11 @@ non-root `nextjs` user. It carries a `HEALTHCHECK` against `/api/health`. Compos
 brings up `postgres:16-alpine` with `db/schema.sql` and `db/seed.sql` mounted into
 `/docker-entrypoint-initdb.d`, and gates the app on the database's own healthcheck.
 
-`docker compose config` parses. **The image build and container boot have not been
-run** — Docker was unavailable on the machine this was last worked on, so treat
-those two steps as unverified.
+Both have been run end to end: the image builds, the container reports healthy,
+and the API answers against the seeded Postgres database (the examples in
+[HTTP API](#http-api) come from that stack). The build downloads the IBM Plex fonts
+through `next/font`, so it needs network access. The demo database keeps the stock
+`postgres`/`postgres` login and is published on localhost only.
 
 ---
 
@@ -320,3 +393,9 @@ those two steps as unverified.
 - **Pagination is offset-based.** Fine at this size; a keyset cursor would be the
   right move past a few thousand projects.
 - **No end-to-end browser tests.** Component and route coverage only.
+
+---
+
+## License
+
+MIT, see [LICENSE](LICENSE).
