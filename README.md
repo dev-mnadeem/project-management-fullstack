@@ -320,3 +320,10 @@ those two steps as unverified.
 - **Pagination is offset-based.** Fine at this size; a keyset cursor would be the
   right move past a few thousand projects.
 - **No end-to-end browser tests.** Component and route coverage only.
+
+## Local browser verification
+
+The production server returned the projects API and rendered the dashboard using
+the memory driver. The refreshed dashboard capture uses that seeded demo.
+[Verification details](docs/native-verification.json); PostgreSQL deployment still
+requires the schema and connection setup above.

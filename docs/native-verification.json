@@ -1,0 +1,5 @@
+{
+  "driver": "memory demo",
+  "projects_api": 200,
+  "dashboard": "rendered"
+}
