@@ -327,3 +327,7 @@ The production server returned the projects API and rendered the dashboard using
 the memory driver. The refreshed dashboard capture uses that seeded demo.
 [Verification details](docs/native-verification.json); PostgreSQL deployment still
 requires the schema and connection setup above.
+
+## Author
+
+[**Muhammad Nadeem**](https://github.com/dev-mnadeem)
